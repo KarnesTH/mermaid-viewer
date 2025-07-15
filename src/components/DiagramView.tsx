@@ -115,7 +115,10 @@ const DiagramView = () => {
 							Fehler: {error}
 						</div>
 					) : (
-						<span className="text-text-muted">Keine Vorschau verfügbar</span>
+						<div className="flex flex-col opacity-40 items-center justify-center w-full h-full">
+              <img src="/logo.svg" alt="Mermaid Viewer Logo" className="w-1/2 h-1/2" />
+							<span className="text-text-muted">Keine Vorschau verfügbar</span>
+						</div>
 					)
         )}
       </div>
