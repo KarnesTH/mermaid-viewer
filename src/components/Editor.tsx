@@ -1,6 +1,30 @@
 import { useState, useRef, useEffect } from 'react';
 
-const KEYWORDS = ['graph', 'subgraph', 'end', 'classDiagram', 'sequenceDiagram', 'stateDiagram', 'flowchart', 'erDiagram'];
+const KEYWORDS = [
+  'graph',
+  'flowchart',
+  'classDiagram',
+  'sequenceDiagram',
+  'stateDiagram',
+  'erDiagram',
+  'gantt',
+  'pie',
+  'journey',
+  'mindmap',
+  'timeline',
+  'quadrantChart',
+  'gitGraph',
+  'C4Context',
+  'C4Container',
+  'C4Component',
+  'C4Dynamic',
+  'C4Deployment',
+  'subgraph',
+  'end',
+  'direction',
+];
+
+const DIRECTIONS = ['TB', 'TD', 'BT', 'RL', 'LR'];
 
 /**
  * Tokenizes a line of code into parts.
@@ -10,18 +34,33 @@ const KEYWORDS = ['graph', 'subgraph', 'end', 'classDiagram', 'sequenceDiagram',
  */
 const tokenize = (line: string) => {
   const regex = new RegExp(`\\b(${KEYWORDS.join('|')})\\b`, 'g');
-  const parts: { text: string; isKeyword: boolean }[] = [];
+	const directionRegex = new RegExp(`\\b(${DIRECTIONS.join('|')})\\b`, 'g');
+
+  const parts: { text: string; isKeyword: boolean; isDirection: boolean }[] = [];
+
+	// Tokenize keywords
   let lastIndex = 0;
   let match;
   while ((match = regex.exec(line)) !== null) {
     if (match.index > lastIndex) {
-      parts.push({ text: line.slice(lastIndex, match.index), isKeyword: false });
+      parts.push({ text: line.slice(lastIndex, match.index), isKeyword: false, isDirection: false });
     }
-    parts.push({ text: match[0], isKeyword: true });
+    parts.push({ text: match[0], isKeyword: true, isDirection: false });
     lastIndex = regex.lastIndex;
   }
+
+	// Tokenize directions
+	while ((match = directionRegex.exec(line)) !== null) {
+		if (match.index > lastIndex) {
+			parts.push({ text: line.slice(lastIndex, match.index), isKeyword: false, isDirection: false });
+		}
+		parts.push({ text: match[0], isKeyword: false, isDirection: true });
+		lastIndex = directionRegex.lastIndex;
+	}
+
+	// Tokenize the rest of the line
   if (lastIndex < line.length) {
-    parts.push({ text: line.slice(lastIndex), isKeyword: false });
+    parts.push({ text: line.slice(lastIndex), isKeyword: false, isDirection: false });
   }
   return parts;
 }
@@ -138,8 +177,8 @@ const Editor = ({ value, onChange, className = '' }: EditorProps) => {
             <span
               key={i}
               style={{
-                color: part.isKeyword ? '#AF13F2' : undefined,
-                fontWeight: part.isKeyword ? 900 : undefined,
+                color: part.isKeyword ? '#AF13F2' : part.isDirection ? '#F984FC' : undefined,
+                fontWeight: part.isKeyword ? 900 : part.isDirection ? 900 : undefined,
                 background: idx === cursor.line && cursor.ch === i ? '#F984FC22' : undefined,
               }}
             >
