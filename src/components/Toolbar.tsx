@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 interface ToolbarProps {
 	code: string;
 	setCode: (code: string) => void;
@@ -11,6 +13,8 @@ interface ToolbarProps {
  * @returns The Toolbar component
  */
 const Toolbar = ({ code, setCode }: ToolbarProps) => {
+	const [downloadUrl, setDownloadUrl] = useState<string>("");
+
 	/**
 	 * Handles the file change event
 	 * 
@@ -24,26 +28,23 @@ const Toolbar = ({ code, setCode }: ToolbarProps) => {
 		setCode(text);
 	}
 
-	/**
-	 * Handles the download of the code
-	 * 
-	 * @returns void
-	 */
-	const handleDownload = () => {
-		const blob = new Blob([code], { type: 'text/plain' });
+	useEffect(() => {
+		if (!code) {
+			setDownloadUrl("");
+			return;
+		}
+		const blob = new Blob([code], { type: "text/plain" });
 		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = 'mermaid-code.mmd';
-		a.click();
-	}
+		setDownloadUrl(url);
+		return () => URL.revokeObjectURL(url);
+	}, [code]);
 
 	return (
 		<div className="absolute top-10 right-10">
 			<div className="flex justify-between items-center gap-4">
 				<div className="flex items-center gap-2">
 					<input type="file" name="file" id="file-upload" accept=".mmd,.mermaid" onChange={handleFileChange} className="hidden" />
-					<label 
+					<label
 						htmlFor="file-upload"
 						title="Upload Mermaid-Code"
 						className="p-2 flex items-center justify-center rounded-xl border-2 border-primary hover:bg-primary hover:border-tertiary text-text hover:text-bg transition-colors duration-300 cursor-pointer"
@@ -52,15 +53,15 @@ const Toolbar = ({ code, setCode }: ToolbarProps) => {
 					</label>
 				</div>
 				<div className="flex items-center gap-2">
-					<input type="file" name="file" id="file-download" accept=".mmd,.mermaid" onChange={() => {}} className="hidden" />
-					<label
-						htmlFor="file-download"
+					<a
+						href={downloadUrl}
+						download="mermaid-code.mmd"
 						title="Download Mermaid-Code"
 						className="p-2 flex items-center justify-center rounded-xl border-2 border-primary hover:bg-primary hover:border-tertiary text-text hover:text-bg transition-colors duration-300 cursor-pointer"
-						onClick={handleDownload}
+						style={{ pointerEvents: downloadUrl ? "auto" : "none", opacity: downloadUrl ? 1 : 0.5 }}
 					>
 						<i className="ri-download-2-line text-xl"></i>
-					</label>
+					</a>
 				</div>
 			</div>
 		</div>
