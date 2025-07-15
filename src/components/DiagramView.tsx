@@ -1,18 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
+import Toolbar from "./Toolbar";
 
+/**
+* DiagramView component
+* 
+* @returns A component that displays a diagram view of the Mermaid code.
+ */
 const DiagramView = () => {
   const [diagramCode, setDiagramCode] = useState('');
   const [svg, setSvg] = useState('');
   const previewRef = useRef<HTMLDivElement>(null);
   const panZoomInstance = useRef<ReturnType<typeof svgPanZoom> | null>(null);
-	const [error, setError] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     mermaid.initialize({ 
       startOnLoad: false,
-			theme: 'dark',
+      theme: 'dark',
     });
     if (diagramCode) {
       mermaid.render('graphDiv', diagramCode).then(({ svg }) => {
@@ -33,13 +39,18 @@ const DiagramView = () => {
         svgElem.setAttribute('width', '100%');
         svgElem.setAttribute('height', '100%');
         if (!svgElem.getAttribute('viewBox')) {
-          const vb = `0 0 800 600`;
+					const bbox = svgElem.getBBox();
+					const bboxWidth = bbox.width;
+					const bboxHeight = bbox.height;
+          const vb = `0 0 ${bboxWidth} ${bboxHeight}`;
           svgElem.setAttribute('viewBox', vb);
         }
         svgElem.style.display = 'block';
         svgElem.style.margin = 'auto';
         svgElem.style.maxWidth = '100%';
         svgElem.style.maxHeight = '100%';
+        svgElem.setAttribute('role', 'img');
+        svgElem.setAttribute('aria-label', 'Diagramm-Vorschau');
 
         panZoomInstance.current?.destroy();
         panZoomInstance.current = svgPanZoom(svgElem, {
@@ -57,43 +68,35 @@ const DiagramView = () => {
     };
   }, [svg]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    const title = `---\ntitle: ${file.name.split('.')[0]}\n---\n`;
-    setDiagramCode(title + text);
-		setError('');
+  /**
+   * Handles the code change event.
+	 * 
+   * @param e The code change event.
+   * @returns void
+   */
+  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDiagramCode(e.target.value);
+    setSvg('');
+    setError('');
   }
-
-	const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setDiagramCode(e.target.value);
-		setSvg('');
-		setError('');
-	}
 
   return (
     <div className="flex w-full h-[80vh] min-h-[400px] overflow-hidden gap-6 p-6 bg-bg text-text">
+			<Toolbar code={diagramCode} setCode={setDiagramCode} />
       {/* Linker Bereich: Editor */}
       <div className="w-1/4 min-w-[200px] max-w-[500px] bg-card shadow-lg flex flex-col rounded-2xl p-4 border border-border">
-        <label className="p-2 text-xs text-text-muted">Mermaid-Code</label>
+        <div className="flex items-center gap-2 mb-2">
+          <label htmlFor="diagramCode" className="p-2 text-xs text-text-muted">Mermaid-Code</label>
+        </div>
         <textarea
+          id="diagramCode"
           className="flex-1 w-full p-2 font-mono text-sm border border-input-border outline-none bg-input-bg text-input-text resize-none"
           value={diagramCode}
           onChange={handleCodeChange}
           spellCheck={false}
         />
-        <div className="flex items-center gap-2 mb-4 mt-4">
-          <label className="text-xs text-text-muted">Datei öffnen:</label>
-          <input
-            type="file"
-            accept=".mmd,.mermaid,text/mermaid"
-            className="text-xs border-2 border-divider rounded-md p-2 bg-input-bg text-input-text"
-            onChange={handleFileChange}
-          />
-        </div>
-        {error && <div className="text-red-500 text-xs">{error}</div>}
       </div>
+
       {/* Rechter Bereich: Vorschau */}
       <div
         ref={previewRef}
@@ -107,7 +110,13 @@ const DiagramView = () => {
             dangerouslySetInnerHTML={{ __html: svg }}
           />
         ) : (
-          <span className="text-text-muted">Keine Vorschau verfügbar</span>
+					error ? (
+						<div className="bg-alert-bg text-alert-text p-2 rounded text-xs mt-2 border border-alert-text">
+							Fehler: {error}
+						</div>
+					) : (
+						<span className="text-text-muted">Keine Vorschau verfügbar</span>
+					)
         )}
       </div>
     </div>
