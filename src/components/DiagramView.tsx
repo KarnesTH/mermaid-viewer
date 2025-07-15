@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import mermaid from "mermaid";
 import svgPanZoom from "svg-pan-zoom";
 import Toolbar from "./Toolbar";
+import Editor from "./Editor";
 
 /**
 * DiagramView component
@@ -74,8 +75,8 @@ const DiagramView = () => {
    * @param e The code change event.
    * @returns void
    */
-  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDiagramCode(e.target.value);
+  const handleCodeChange = (value: string) => {
+    setDiagramCode(value);
     setSvg('');
     setError('');
   }
@@ -85,16 +86,7 @@ const DiagramView = () => {
 			<Toolbar code={diagramCode} setCode={setDiagramCode} />
       {/* Linker Bereich: Editor */}
       <div className="w-1/4 min-w-[200px] max-w-[500px] bg-card shadow-lg flex flex-col rounded-2xl p-4 border border-border">
-        <div className="flex items-center gap-2 mb-2">
-          <label htmlFor="diagramCode" className="p-2 text-xs text-text-muted">Mermaid-Code</label>
-        </div>
-        <textarea
-          id="diagramCode"
-          className="flex-1 w-full p-2 font-mono text-sm border border-input-border outline-none bg-input-bg text-input-text resize-none"
-          value={diagramCode}
-          onChange={handleCodeChange}
-          spellCheck={false}
-        />
+        <Editor value={diagramCode} onChange={handleCodeChange} />
       </div>
 
       {/* Rechter Bereich: Vorschau */}
